@@ -1,10 +1,11 @@
+import { BrowserRouter } from "react-router";
+import AppRoutes from "./routes";
+
 function App() {
   return (
-    <>
-      <div className="">
-        <span>Cv Ideal</span>
-      </div>
-    </>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 
