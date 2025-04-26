@@ -1,8 +1,11 @@
 import { createContext, useCallback, useState, useMemo } from "react";
 import { api } from "../services/api";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 export type User = {
+  id: string;
   name: string;
   email: string;
   password: string;
@@ -22,41 +25,47 @@ export type UserResponse = {
   phone: string;
 };
 
-interface SignInProps {
+interface SignIn {
   email: string;
   password: string;
 }
 
 interface AuthContextValues {
   user: UserResponse | null;
-  signIn: (data: SignInProps) => void;
-  signUp: (data: User) => void;
+  signIn: (data: SignIn) => Promise<void>;
+  signUp: (data: User) => Promise<void>;
+  signOut: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValues>({
   user: null,
-  signIn: () => {},
-  signUp: () => {},
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
 });
 
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
-  const [user, setUser] = useState<UserResponse>(null);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [user, setUser] = useState<UserResponse | null>(null);
+  // const [loading, setLoading] = useState(true);
 
-  const signIn = useCallback(async ({ email, password }: SignInProps) => {
-    try {
-      const response = await api.post("auth/sign-in", {
+  const signIn = useCallback(
+    async ({ email, password }: SignIn) => {
+      console.log("Inicio da função");
+      const response = await api.post<UserResponse>("/auth/sign-in", {
         email,
         password,
       });
 
-      Cookies.set("accessToken", response.data.accessToken);
+      Cookies.set("accessToken", response.data.accessToken, {
+        expires: 7,
+      });
 
       setUser(response.data);
-    } catch (error) {
-      console.log("Error: ", error);
-    }
-  }, []);
+      navigate("/");
+    },
+    [navigate]
+  );
 
   const signUp = useCallback(
     async (user: User) => {
@@ -79,13 +88,20 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     [signIn]
   );
 
+  const signOut = useCallback(async () => {
+    Cookies.remove("accessToken");
+    setUser(null);
+    navigate("/login");
+  }, [navigate]);
+
   const values = useMemo(
     () => ({
       user,
       signIn,
       signUp,
+      signOut,
     }),
-    [signIn, signUp, user]
+    [signIn, signOut, signUp, user]
   );
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
