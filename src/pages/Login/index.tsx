@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { LoginFormSchema, loginFormSchema } from "./schemas/LoginFormSchema";
+import { loginFormSchema } from "./schemas/LoginFormSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Layout from "../../components/Layout";
 import {
@@ -14,11 +14,23 @@ import { Input } from "../../components/ui/input";
 import PasswordInput from "../../components/PasswordInput";
 import { Button } from "../../components/ui/button";
 import Logo from "../../assets/cv-Ideal.png";
-import { useCallback } from "react";
-import { api } from "../../services/api";
+import { useCallback, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { z } from "zod";
+import { useSearchParams } from "react-router";
 
 export default function Login() {
-  const form = useForm({
+  const { signIn } = useAuth();
+  const [params] = useSearchParams();
+  // const [email, setEmail] = useState(params.get("email"));
+  // const [password, setPassword] = useState(params.get("password"));
+
+  // console.log({
+  //   email,
+  //   password,
+  // });
+
+  const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
@@ -26,16 +38,23 @@ export default function Login() {
     },
   });
 
-  const handleSubmit = useCallback(async (values: LoginFormSchema) => {
-    console.log("Chamando função");
-    try {
-      const response = await api.post("auth/sign-in", values);
+  const handleSubmit = useCallback(
+    async (values: z.infer<typeof loginFormSchema>) => {
+      console.log("Chamando função");
 
-      console.log(JSON.stringify(response.data, null, 2));
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
+      try {
+        await signIn({
+          email: values.email,
+          password: values.password,
+        });
+
+        console.log("Dentr do try");
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [signIn]
+  );
 
   return (
     <Layout className="bg-linear-to-b from-[#A8D5BA]/80 to-white">
