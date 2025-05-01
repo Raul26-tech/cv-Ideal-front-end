@@ -3,7 +3,7 @@ import Header from "../Header";
 import { useAuth } from "../../hooks/useAuth";
 
 interface layoutProps extends HTMLAttributes<HTMLDivElement> {
-  children: React.JSX.Element;
+  children: React.ReactNode;
 }
 
 export default function Layout({ children, className }: layoutProps) {

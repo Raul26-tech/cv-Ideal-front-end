@@ -1,4 +1,10 @@
-import { createContext, useCallback, useState, useMemo } from "react";
+import {
+  createContext,
+  useCallback,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import { api } from "../services/api";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router";
@@ -47,7 +53,7 @@ export const AuthContext = createContext<AuthContextValues>({
 export const AuthProvider = ({ children }: React.PropsWithChildren) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserResponse | null>(null);
-  // const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const signIn = useCallback(
     async ({ email, password }: SignIn) => {
@@ -74,9 +80,6 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
           ...user,
         });
 
-        // Antes de fazer login, o retorno da api de sign-up, o campo password
-        // vem com hash, é necessário desfazer o hash para efetuar login
-
         await signIn({
           email: user.email,
           password: user.password,
@@ -94,14 +97,36 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
     navigate("/login");
   }, [navigate]);
 
+  // Função que persiste os dados do usuário quando o componente é montado
+  const restoreToken = useCallback(async () => {
+    try {
+      const token = Cookies.get("accessToken");
+
+      if (token && !user) {
+        const response = await api.get("/auth/me");
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    restoreToken();
+  }, [restoreToken]);
+
   const values = useMemo(
     () => ({
       user,
       signIn,
       signUp,
       signOut,
+      loading,
     }),
-    [signIn, signOut, signUp, user]
+    [loading, signIn, signOut, signUp, user]
   );
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;

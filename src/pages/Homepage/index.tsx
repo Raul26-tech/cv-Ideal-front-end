@@ -1,8 +1,11 @@
+import Layout from "../../components/Layout";
+import logo from "../../assets/cv-Ideal.png";
+
 export default function Homepage() {
   return (
-    <div className="w-screen h-screen flex flex-col justify-center items-center space-y-4">
+    <Layout>
       <span className="text-3xl">Sejá bem-vindo(a) ao Cv-Ideal</span>
-      <img src="src/assets/cv-Ideal.png" alt="Logo" />
-    </div>
+      <img src={logo} alt="Logo" />
+    </Layout>
   );
 }

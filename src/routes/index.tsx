@@ -9,7 +9,7 @@ export default function AppRoutes() {
   return (
     <Suspense>
       <Routes>
-        <Route path="login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/"
           element={
