@@ -9,8 +9,6 @@ interface layoutProps extends HTMLAttributes<HTMLDivElement> {
 export default function Layout({ children, className }: layoutProps) {
   const { user } = useAuth();
 
-  console.log(user);
-
   return (
     <>
       {user && <Header />}

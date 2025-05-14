@@ -4,11 +4,15 @@ import {
   useState,
   useMemo,
   useEffect,
+  ReactNode,
 } from "react";
 import { api } from "../services/api";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router";
-// import { useNavigate } from "react-router";
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
 export type User = {
   id: string;
@@ -22,13 +26,7 @@ export type User = {
 
 export type UserResponse = {
   accessToken: string;
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  cpf: string;
-  status: string;
-  phone: string;
+  user: User;
 };
 
 interface SignIn {
@@ -37,41 +35,44 @@ interface SignIn {
 }
 
 interface AuthContextValues {
-  user: UserResponse | null;
+  user: User | null;
+  loading?: boolean;
   signIn: (data: SignIn) => Promise<void>;
   signUp: (data: User) => Promise<void>;
   signOut: () => void;
+  navigateToHomePage: (userData: User) => void;
 }
 
 export const AuthContext = createContext<AuthContextValues>({
   user: null,
+  loading: true,
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  navigateToHomePage: async () => {},
 });
 
-export const AuthProvider = ({ children }: React.PropsWithChildren) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
-  const signIn = useCallback(
-    async ({ email, password }: SignIn) => {
-      console.log("Inicio da função");
-      const response = await api.post<UserResponse>("/auth/sign-in", {
-        email,
-        password,
-      });
+  const navigateToHomePage = useCallback(async () => {
+    navigate("/");
+  }, [navigate]);
 
-      Cookies.set("accessToken", response.data.accessToken, {
-        expires: 7,
-      });
+  const signIn = useCallback(async ({ email, password }: SignIn) => {
+    const response = await api.post<UserResponse>("/auth/sign-in", {
+      email,
+      password,
+    });
 
-      setUser(response.data);
-      navigate("/");
-    },
-    [navigate]
-  );
+    Cookies.set("accessToken", response.data.accessToken, {
+      expires: 7,
+    });
+
+    setUser(response.data.user);
+  }, []);
 
   const signUp = useCallback(
     async (user: User) => {
@@ -103,16 +104,17 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
       const token = Cookies.get("accessToken");
 
       if (token && !user) {
-        const response = await api.get("/auth/me");
-        setUser(response.data.user);
+        const response = await api.get<User>("/auth/me");
+        setUser(response.data);
       }
     } catch (error) {
       setLoading(false);
-      console.log(error);
+      signOut();
+      console.log("Error: ", error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [signOut, user]);
 
   useEffect(() => {
     restoreToken();
@@ -124,9 +126,10 @@ export const AuthProvider = ({ children }: React.PropsWithChildren) => {
       signIn,
       signUp,
       signOut,
+      navigateToHomePage,
       loading,
     }),
-    [loading, signIn, signOut, signUp, user]
+    [loading, navigateToHomePage, signIn, signOut, signUp, user]
   );
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;

@@ -4,12 +4,22 @@ import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import Homepage from "../pages/Homepage";
 import ProtectedRoute from "./ProtectedRoute";
+import SuspensePage from "../components/SuspensePage";
+import PublicRoute from "./PublicRoute";
 
 export default function AppRoutes() {
   return (
-    <Suspense>
+    <Suspense fallback={<SuspensePage />}>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute redirectWhenAuthenticated>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
         <Route
           path="/"
           element={
@@ -18,6 +28,7 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         {/* Notfound */}
         <Route path="*" element={<NotFound />} />
       </Routes>

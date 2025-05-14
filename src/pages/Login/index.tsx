@@ -19,7 +19,9 @@ import { useAuth } from "../../hooks/useAuth";
 import { z } from "zod";
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  console.log("User no login: ", user);
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -31,22 +33,19 @@ export default function Login() {
 
   const handleSubmit = useCallback(
     async (values: z.infer<typeof loginFormSchema>) => {
-      console.log("Chamando função");
-
       try {
-        await signIn({
-          email: values.email,
-          password: values.password,
-        });
-
-        console.log("Dentr do try");
+        await Promise.all([
+          await signIn({
+            email: values.email,
+            password: values.password,
+          }),
+        ]);
       } catch (error) {
         console.log(error);
       }
     },
     [signIn]
   );
-
   return (
     <Layout className="bg-linear-to-b from-[#A8D5BA]/80 to-white">
       <Form {...form}>

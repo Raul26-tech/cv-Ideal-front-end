@@ -20,7 +20,7 @@ export default function Header() {
         <DropdownMenuTrigger>
           <Button variant="outline" className="flex">
             <span className="min-w-20 text-gray-500">
-              {user?.name.split(" ")[0]}
+              {user ? user?.name.split(" ")[0] : null}
             </span>
             {open ? (
               <ExpandLessIcon color="action" />
