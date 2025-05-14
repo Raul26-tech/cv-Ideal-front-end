@@ -8,7 +8,11 @@ interface ProtectedRoutesProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRoutesProps) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div />;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
